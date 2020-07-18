@@ -118,7 +118,7 @@ We also have a replication factor of 2. Which will mean our partitions will be r
 
 ![6.png](./images/7.png)
 
-Let's look at what happens if we lose Broker 102 in our example: 
+Let's look at what happens if we lose Broker 102 in our example:
 
 ![8.png](./images/8.png)
 
@@ -126,14 +126,14 @@ Even with broker 102 down, we still have access to all our data!
 
 ## Partition leaders
 
-The golden rule is: 
+The golden rule is:
 
-- At any given time, only ONE broker can be a leader for a given partition. 
-Only that leader can receive and serve data for a partition. 
+- At any given time, only ONE broker can be a leader for a given partition.
+  Only that leader can receive and serve data for a partition.
 - The other brokers will only passively sync the data for that partition.
 - Each partition has one leader and multiple in-sync replicas (ISR).
 
-For partition 0, broker 101 is the leader and broker 102 is the ISR. 
+For partition 0, broker 101 is the leader and broker 102 is the ISR.
 For partition 1, broker 102 is the leader and broker 103 is the ISR.
 
 The system that decides leaders and ISRs is called `Zookeeper`. If a broker goes down, there's an election to decide the new leader. Once the broker that went down comes back up - it will try to become the leader again after syncing the data.
@@ -144,17 +144,17 @@ The system that decides leaders and ISRs is called `Zookeeper`. If a broker goes
 - Producers automatically know to which broker and partition to write to
 - In case of broker failures, producers will automatically recover (this is part of kafka).
 
-Here's the sequence diagram: 
+Here's the sequence diagram:
 
-![8.png](./images/8.png)
+![9.png](./images/9.png)
 
-Our producer will send data to our brokers. Basically, if the data does not have a key - that data will be sent round robin to broker 101, 102 and 103. 
+Our producer will send data to our brokers. Basically, if the data does not have a key - that data will be sent round robin to broker 101, 102 and 103.
 
-The producer automatically load balances, i.e. it sends a bit to 101, a bit to 102 and a bit to 103. 
+The producer automatically load balances, i.e. it sends a bit to 101, a bit to 102 and a bit to 103.
 
-If we take this exact same topic, let's look at how the producer does it's job. 
+If we take this exact same topic, let's look at how the producer does it's job.
 
-Producers can choose to receive ackowledgement of data writes. 
+Producers can choose to receive ackowledgement of data writes.
 
 ```
 acks=0: Producer won't wait for ackowledgement of data write
@@ -168,6 +168,35 @@ acks=all: Leader + replicas send acknowledgement of data write
 - If key=null, data is sent round robin (broker 101, then 102, then 103).
 - If a key is sent to the producer, then all messages for that key will always go to the same partition
 - A key is basically sent if you need message ordering for a specific field (eg: truck_id)
+
+### Truck example
+
+If we go back to the earlier trucking example (1000 trucks in a fleet, all sending their lattitude and longitude every 20 seconds along with the truck ID):
+
+- For a given truck, we want the GPS data for that truck (say truck id: 123) to be in order
+- We'll choose this truck id 123 as the key when we send messages to the producer. 
+- When a truck id is present, this data will always go to the same partition (for eg: partition 0)
+- This mechanism of a certain key going to a certain partition is called as key hashing. 
+
+# Consumers
+
+- Consumers read data from a topic (identified by name)
+- Consumers know which broker to read from
+- In case of broker failures, consumers know how to recover
+- Data is read in order within each partitions
+
+![10.png](./images/10.png)
+
+In the diagram above, the consumer will read data at offset 0 before reading the data at offset 3, before reading the data at offset 10, and so on. 
+
+**But there's no ordering between two separate partitions**
+
+![11.png](./images/11.png)
+
+Again, there's no guarantee of order between two separate partitions. It might read offset 3 on partition 1 before reading offset 2 on partition 0 (for example).
+
+
+
 
 
 

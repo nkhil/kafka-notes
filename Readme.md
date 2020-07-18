@@ -106,7 +106,7 @@ Data is distributed and Broker 103 doesn't have any topic B data.
 Kafka is a distributed system. In a distributed system, we need replication for resiliency. If a machine goes down, the system cannot just stop serving up data.
 
 - Topics should have a replication factor > 1 (usually between 2 & 3, and 3 being the gold standard).
-- When you create a topic, you want it to be replicated. If a broker is down, then another broker can serve the date you need.
+- When you create a topic, you want it to be replicated. If a broker is down, then another broker can serve the data you need.
 
 Let's consider this in a new example:
 
@@ -143,3 +143,34 @@ The system that decides leaders and ISRs is called `Zookeeper`. If a broker goes
 - Producers write data to topics (which in turn is made of partitions)
 - Producers automatically know to which broker and partition to write to
 - In case of broker failures, producers will automatically recover (this is part of kafka).
+
+Here's the sequence diagram: 
+
+![8.png](./images/8.png)
+
+Our producer will send data to our brokers. Basically, if the data does not have a key - that data will be sent round robin to broker 101, 102 and 103. 
+
+The producer automatically load balances, i.e. it sends a bit to 101, a bit to 102 and a bit to 103. 
+
+If we take this exact same topic, let's look at how the producer does it's job. 
+
+Producers can choose to receive ackowledgement of data writes. 
+
+```
+acks=0: Producer won't wait for ackowledgement of data write
+acks=1: Producer will wait for leader acknowledgment
+acks=all: Leader + replicas send acknowledgement of data write
+```
+
+## Message keys for producers
+
+- Producers can choose to send a key with messages (can be a string, number etc)
+- If key=null, data is sent round robin (broker 101, then 102, then 103).
+- If a key is sent to the producer, then all messages for that key will always go to the same partition
+- A key is basically sent if you need message ordering for a specific field (eg: truck_id)
+
+
+
+
+
+

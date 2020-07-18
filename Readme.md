@@ -59,6 +59,8 @@ To refer to a message, we'll be referring to it as `Partition 0, offset 0` etc.
 - Each truck will send a message to Kafka every 20 seconds.
 - Each message will contain the truck ID and the truck position (lat long).
 
+**Note**: _The location dashboard & notification service in the diagram above are our consumers_. _More on that later_.
+
 Our `trucks_gps` topic will have an arbitrary number of partitions (let's say 10).
 
 A few gotchas:
@@ -71,18 +73,73 @@ A few gotchas:
 
 # Brokers
 
-A Kafka cluster is composed of multiple brokers (or servers).
+- A Kafka cluster is composed of multiple brokers (or servers).
 
-Each broker is identified by an ID (which is always a number)
+- Each broker is identified by an ID (which is always a number)
 
-Each broker will contain certain topic partitions, so it will have some of the data but not all the data because Kafka is distributed.
+- Each broker will contain certain topic partitions, so it will have some of the data but not all the data because Kafka is distributed.
 
-When you're connected to a particular Kafka broker (called a bootstrap broker), you will be connected to the entire cluster.
+- When you're connected to a particular Kafka broker (called a bootstrap broker), you will be connected to the entire cluster.
 
-A good number to get started is 3 brokers, but some big clusters have over 100 brokers.
+- A good number to get started is 3 brokers, but some big clusters have over 100 brokers.
 
 # Brokers & Topics
 
-Let's say we have 3 brokwers:
+Let's say we have 3 brokers (101, 102 & 103):
 
 ![3.png](./images/2.png)
+
+Let's say we have a topic called `Topic-A` and it has **3 partitions**
+
+Our topic, on creation, is distributed amongst our brokers by Kafka. Note that there is no relation between our partition number and broker ID.
+
+![4.png](./images/4.png)
+
+Say we have another topic `Topic-B`, and this topic only has **2 partitions**.
+
+![5.png](./images/5.png)
+
+Data is distributed and Broker 103 doesn't have any topic B data.
+
+## Topic replication factor
+
+Kafka is a distributed system. In a distributed system, we need replication for resiliency. If a machine goes down, the system cannot just stop serving up data.
+
+- Topics should have a replication factor > 1 (usually between 2 & 3, and 3 being the gold standard).
+- When you create a topic, you want it to be replicated. If a broker is down, then another broker can serve the date you need.
+
+Let's consider this in a new example:
+
+Our topic here is called `Topic-A`, and has two partitions (`partition 0` and `partition 1`).
+
+![6.png](./images/6.png)
+
+We also have a replication factor of 2. Which will mean our partitions will be replicated twice, like so:
+
+![6.png](./images/7.png)
+
+Let's look at what happens if we lose Broker 102 in our example: 
+
+![8.png](./images/8.png)
+
+Even with broker 102 down, we still have access to all our data!
+
+## Partition leaders
+
+The golden rule is: 
+
+- At any given time, only ONE broker can be a leader for a given partition. 
+Only that leader can receive and serve data for a partition. 
+- The other brokers will only passively sync the data for that partition.
+- Each partition has one leader and multiple in-sync replicas (ISR).
+
+For partition 0, broker 101 is the leader and broker 102 is the ISR. 
+For partition 1, broker 102 is the leader and broker 103 is the ISR.
+
+The system that decides leaders and ISRs is called `Zookeeper`. If a broker goes down, there's an election to decide the new leader. Once the broker that went down comes back up - it will try to become the leader again after syncing the data.
+
+# Producers
+
+- Producers write data to topics (which in turn is made of partitions)
+- Producers automatically know to which broker and partition to write to
+- In case of broker failures, producers will automatically recover (this is part of kafka).

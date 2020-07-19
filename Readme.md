@@ -195,6 +195,13 @@ In the diagram above, the consumer will read data at offset 0 before reading the
 
 Again, there's no guarantee of order between two separate partitions. It might read offset 3 on partition 1 before reading offset 2 on partition 0 (for example).
 
+## Consumer Groups
+
+- A consumer can be a node app (for example). 
+- Consumers read data in consumer groups.
+- Each consumer within a group reads from exclusive partitions.
+- If you have more consumers than partitions, some consumers will be inactive. 
+
 
 
 

@@ -197,3 +197,35 @@ Again, there's no guarantee of order between two separate partitions. It might r
 - Consumers read data in consumer groups.
 - Each consumer within a group reads from exclusive partitions.
 - If you have more consumers than partitions, some consumers will be inactive.
+
+**Why do we need consumer groups?**
+
+#### Scenario: 1 Topic 1 partition, 2 consumers (no groups)
+
+![1.png](./images/consumer_groups/1.png)
+
+Here we have `Topic A`, with a single partition, and with 2 consumers. They are both reading from it, but have different offsets (eg: Consumer 1 is reading at offset 1) and there's no co-ordination between them.
+
+**Note**: The offset background colours represent messages with different key values.
+
+> For eg: the green one might have `key value: 123`, and blue one might have `key value: 456`.
+
+#### Scenario: 1 Topic, 2 partitions, 2 consumers (no groups)
+
+![2.png](./images/consumer_groups/2.png)
+
+Both consumers `C1` and `C2` read from the topics independently of one another, and they will read from each partition on their own.
+
+But, what happens if we set a consumer group now?
+
+#### Scenario: 1 Topic, 2 partitions, 2 consumers in a consumer group
+
+![3.png](./images/consumer_groups/3.png)
+
+Now each consumer will be assigned a particular partition.
+
+#### Scenario: 1 Topic, 2 partitions, 3 consumers in a consumer group
+
+![4.png](./images/consumer_groups/4.png)
+
+In this scenario, we can choose to have an 'extra' consumer i.e. one more than the number of partitions we have. This consumer will be idle, and only be used if `C2` dies (for whatever reason). Essentially, `C3` is a stand-in in case something breaks, and it can seamlessly become the stand-in and keep things running smoothly.

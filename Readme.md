@@ -14,14 +14,10 @@ If you have 4 'main' services, and 6 'sub' services, you need to write 24 integr
 ## Usecases
 
 - Netflix uses kafka to apply recommendations in real-time
-- Uber uses it to gather user, taxi and trip data in real-time to compute forecast demand and computer surge-pricing in real-time
+- Uber uses it to gather user, taxi and trip data in real-time to calculate forecast demand and compute surge-pricing in real-time
 - LinkedIN uses it to prevent spam, collect user interactions and make better connection recommendations.
 
 **Remember** - Kafka is only used as a transportation mechanism! You still need to write applications to make things work.
-
-## My objectives
-
-- Ability to use Kafka on the CLI
 
 ## Topics, partitions and offsets
 
@@ -69,7 +65,7 @@ A few gotchas:
 - Order is only guaranteed within a partition. For eg: we can guarantee that offset 5 in partition 0 has been written before offset 6, 7 and 8. BUT we cannot offset 5 in partition 1 was written before offset 6 in partition 0.
 - Data is only kept for a limited period of time (by default for 1 week).
   The data inside the offsets will be deleted, but it's immutable. You cannot update it and even once it's deleted, you will have to add it to another offset.
-- Data is assigned randomly to a partition unless a key is provided. So if you try to add a message, it will be added to partition 0, 1 or 2 and wew can't control that.
+- Data is assigned randomly to a partition unless a key is provided. So if you try to add a message without a key, it will be added to partition 0, 1 or 2 and we can't control that.
 
 # Brokers
 
@@ -87,7 +83,7 @@ A few gotchas:
 
 Let's say we have 3 brokers (101, 102 & 103):
 
-![3.png](./images/2.png)
+![3.png](./images/3.png)
 
 Let's say we have a topic called `Topic-A` and it has **3 partitions**
 
@@ -136,12 +132,12 @@ The golden rule is:
 For partition 0, broker 101 is the leader and broker 102 is the ISR.
 For partition 1, broker 102 is the leader and broker 103 is the ISR.
 
-The system that decides leaders and ISRs is called `Zookeeper`. If a broker goes down, there's an election to decide the new leader. Once the broker that went down comes back up - it will try to become the leader again after syncing the data.
+The system that decides leaders and ISRs is called `Zookeeper`. If a broker goes down, there's an election to decide the new leader. Once the broker that went down comes back up - it will try to become the leader again after syncing all the data.
 
 # Producers
 
 - Producers write data to topics (which in turn is made of partitions)
-- Producers automatically know to which broker and partition to write to
+- Producers automatically know which broker and partition to write to
 - In case of broker failures, producers will automatically recover (this is part of kafka).
 
 Here's the sequence diagram:
@@ -158,7 +154,7 @@ Producers can choose to receive ackowledgement of data writes.
 
 ```
 acks=0: Producer won't wait for ackowledgement of data write
-acks=1: Producer will wait for leader acknowledgment
+acks=1: Producer will wait for leader acknowledgment of data write
 acks=all: Leader + replicas send acknowledgement of data write
 ```
 
@@ -174,20 +170,20 @@ acks=all: Leader + replicas send acknowledgement of data write
 If we go back to the earlier trucking example (1000 trucks in a fleet, all sending their lattitude and longitude every 20 seconds along with the truck ID):
 
 - For a given truck, we want the GPS data for that truck (say truck id: 123) to be in order
-- We'll choose this truck id 123 as the key when we send messages to the producer. 
+- We'll choose this truck id 123 as the key when we send messages to the producer.
 - When a truck id is present, this data will always go to the same partition (for eg: partition 0)
-- This mechanism of a certain key going to a certain partition is called as key hashing. 
+- This mechanism of a certain key going to a certain partition is known as **key hashing**.
 
 # Consumers
 
 - Consumers read data from a topic (identified by name)
-- Consumers know which broker to read from
+- Consumers know which broker to read from (part of Kafka)
 - In case of broker failures, consumers know how to recover
-- Data is read in order within each partitions
+- Data is read in order within each partition
 
 ![10.png](./images/10.png)
 
-In the diagram above, the consumer will read data at offset 0 before reading the data at offset 3, before reading the data at offset 10, and so on. 
+In the diagram above, the consumer will read data at offset 0 before reading the data at offset 3, before reading the data at offset 10, and so on.
 
 **But there's no ordering between two separate partitions**
 
@@ -197,16 +193,7 @@ Again, there's no guarantee of order between two separate partitions. It might r
 
 ## Consumer Groups
 
-- A consumer can be a node app (for example). 
+- A consumer can be a node app (for example).
 - Consumers read data in consumer groups.
 - Each consumer within a group reads from exclusive partitions.
-- If you have more consumers than partitions, some consumers will be inactive. 
-
-
-
-
-
-
-
-
-
+- If you have more consumers than partitions, some consumers will be inactive.

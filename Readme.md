@@ -199,6 +199,7 @@ Again, there's no guarantee of order between two separate partitions. It might r
 - If you have more consumers than partitions, some consumers will be inactive.
 
 **Why do we need consumer groups?**
+[Reference: YouTube video](https://www.youtube.com/watch?v=Z1_7K_2WTDc)
 
 #### Scenario: 1 Topic 1 partition, 2 consumers (no groups)
 
@@ -229,3 +230,11 @@ Now each consumer will be assigned a particular partition.
 ![4.png](./images/consumer_groups/4.png)
 
 In this scenario, we can choose to have an 'extra' consumer i.e. one more than the number of partitions we have. This consumer will be idle, and only be used if `C2` dies (for whatever reason). Essentially, `C3` is a stand-in in case something breaks, and it can seamlessly become the stand-in and keep things running smoothly.
+
+#### Scenario: 1 Topic, multiple partitions, 2 consumers in a consumer group
+
+![5.png](./images/consumer_groups/5.png)
+
+![6.png](./images/consumer_groups/6.png)
+
+Our partitions will automatically get divided (odd or even) between the available consumers in our consumer group.

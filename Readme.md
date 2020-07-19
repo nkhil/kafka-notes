@@ -238,3 +238,34 @@ In this scenario, we can choose to have an 'extra' consumer i.e. one more than t
 ![6.png](./images/consumer_groups/6.png)
 
 Our partitions will automatically get divided (odd or even) between the available consumers in our consumer group.
+
+# Consumer offsets
+
+- Kafka stores the offsets at which a consumer group has been reading
+- The offsets committed live in a kafka topic named `__consumer_offsets`.
+- When a consumer in a group has processed data received from Kafka, it should be committing the offsets
+- If a consumer dies, it will be able to read back from where it left off thanks to the committed consumer offsets.
+
+![1.png](./images/consumer_offsets/1.png)
+
+## Delivery semantics for consumers
+
+Consumers choose when to commit offsets
+
+There are 3 delivery semantics:
+
+1. **At most once**
+
+- Offsets commited as soon as the message is received - BEFORE it is processed.
+- If the processing of this message goes wrong, it won't be read again
+
+2. **At least once**
+
+- Offsets are committed AFTER a message is processed.
+- If processing goes wrong, the message will be read again.
+- This can result in duplicate processing of messages. Due to this, care has to be taken so the message processins is idempotent. (if we end up processing the same message again, it won't impact other systems).
+
+3. **Exactly once**
+
+- This can be achieved for Kafka to Kafka workflows using the Kafka Streams API.
+- For Kafka to external system workflows, use an idempotent consumer.

@@ -269,3 +269,45 @@ There are 3 delivery semantics:
 
 - This can be achieved for Kafka to Kafka workflows using the Kafka Streams API.
 - For Kafka to external system workflows, use an idempotent consumer.
+
+# Kafka Broker Discovery
+
+- Every Kafka server is also called a `bootstrap server`.
+- We only need to connect to one broker and we'll be connected to the entire cluster.
+- Each broker knows about all brokers, topics and partitions (metadata).
+
+Say we have a Kafka cluster with 5 brokers (101, 102 etc)
+
+![1.png](./images/broker_discovery/1.png)
+
+Once a client (can be a producer or a consumer) connects to a broker (above it's `Broker 101`) and makes a request for metadata, we get a list of all brokers. We can now utilise this metadata and connect to the needed brokers.
+
+This is the mechanism of how the client can connect to the entire cluster from a single connection with a broker.
+
+# Zookeeper
+
+- Zookeper manages brokers (keeps a list of them)
+- Zookeeper helps in performing leader election for partitions
+- Zookeeper sends notifications to Kafka in case of changes (for eg: if a new topic, broker dies, broker comes up, topics are deleted etc)
+- Kafka cannot work without zookeeper
+- Zookeeper by design operates with an odd number of servers (3, 5, 7, ...)
+- Zookeeper also has a concept of a leader (handles writes), and the rest of the servers are followers (handles reads). Your producers and consumers don't write to Zookeeper directly, they write to Kafka. Kafka manages its own metadata in Zookeeper
+- Zookeeper does not store consumer offsets after Kafka V0.10
+
+Here's what zookeeper looks like in action (note the 1 leader and 2 followers)
+
+![1.png](./images/zookeeper/1.png)
+
+# Kafka guarantees
+
+- Messages are appended to the topic-partition in the order they are sent
+- Consumers read messages in the order stored in a topic partition
+- With a replication factor of `N`, producers and consumers can rolerate upto `N - 1` brokers being down
+- This is why a replication factor of 3 is a good idea:
+  - This allows one broker to be taken down for maintenance
+  - In addition, it allows for another broker to be taken down unexpectedly
+- As long as the number of partitions remain constant for a topic (no new partitions are added), the same key will point to the same partition
+
+# Summary
+
+![1.png](./images/summary/1.png)

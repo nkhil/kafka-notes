@@ -311,3 +311,19 @@ Here's what zookeeper looks like in action (note the 1 leader and 2 followers)
 # Summary
 
 ![1.png](./images/summary/1.png)
+
+# Install Kafka on Mac
+
+[This is an easy to follow guide](https://medium.com/@Ankitthakur/apache-kafka-installation-on-mac-using-homebrew-a367cdefd273) on medium to get Kafka set up locally, since I ran into some issues.
+
+Other options to run Kafka include in a docker container
+
+(Also look into Kafka console consumer, Kafka console producer and Kafka cat to use in the place of Kafka console consumer).
+
+## Commands
+
+As mentioned in the article above, if you face issues running `kafka-server-start /usr/local/etc/kafka/server.properties`, you will need to substitute the value of `listeners` in `/usr/local/etc/kafka/server.properties` to
+
+```
+listeners=PLAINTEXT://localhost:9092
+```

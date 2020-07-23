@@ -327,3 +327,47 @@ As mentioned in the article above, if you face issues running `kafka-server-star
 ```
 listeners=PLAINTEXT://localhost:9092
 ```
+
+To create a new topic
+
+```bash
+kafka-topics --bootstrap-server localhost:9092 --topic first_topic --create
+```
+
+> I'm not entirely sure why the above command does not error, given that we haven't said how many partitions we want (using the --partitions tag) or what the replication factor is (--replication-factor). It looks like it defaults to 1 partition, and a replication factor of 1.
+
+To list all the topics
+
+```bash
+kafka-topics --bootstrap-server localhost:9092 --list
+
+# first_topic
+```
+
+To get more information about a topic:
+
+```bash
+kafka-topics --bootstrap-server localhost:9092 --topic first_topic --describe
+
+# Topic: first_topic	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+# 	Topic: first_topic	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+```
+
+Making a second partition, while specifying replication factor and partitions:
+
+```bash
+kafka-topics --bootstrap-server localhost:9092 --topic second_topic --create --partitions 6 --replication-factor 1
+```
+
+This is what `second_topic` looks like:
+
+```bash
+kafka-topics --bootstrap-server localhost:9092 --topic second_topic --describe
+Topic: second_topic	PartitionCount: 6	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+	Topic: second_topic	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 3	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
+```

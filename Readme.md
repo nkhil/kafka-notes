@@ -334,7 +334,7 @@ To create a new topic
 kafka-topics --bootstrap-server localhost:9092 --topic first_topic --create
 ```
 
-> I'm not entirely sure why the above command does not error, given that we haven't said how many partitions we want (using the --partitions tag) or what the replication factor is (--replication-factor). It looks like it defaults to 1 partition, and a replication factor of 1.
+> If you don't provide the number of partitions (using `--partitions`) or the replication factor (using `--replication-factor`), they both default to 1
 
 To list all the topics
 

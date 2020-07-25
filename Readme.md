@@ -458,6 +458,43 @@ num.recovery.threads.per.data.dir=1
 ```
 The `num.partitions` value is what you're after. Here I've modified it from 1 to 3. 
 
+# Kafka console consumer CLI
+
+To consume messages, let's try listening for `first_topic`.
+
+```bash
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic first_topic
+```
+
+Nothing happens yet, as the consumer will start listening only from the point it was launched. 
+
+If we now put some messages onto the `first_topic` topic in a separate terminal, while keeping the terminal with the above command going simultaneously: 
+
+```bash
+kafka-console-producer --broker-list 127.0.0.1:9092 --topic first_topic 
+> Hello World!
+```
+
+You should see the `Hello World!` message being consumed in the consumer terminal window. 
+
+*add the `--from-beginning` read all the messages from the beginning*
+
+```bash
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic first_topic --from-beginning
+```
+You should now see all the messages sent to the `first_topic` topic. 
+
+## Adding Kafka consumer groups
+
+Keep the producer going as is, if you have it going. Cancel out of consumers as we're going to create a consumer group to run our consumers
+
+In this case, I have a producer for topic `new_topic_1` (which has 3 partitions - 0, 1, 2) producing messages. We're now going to create a consumer group called `consumer_group_2`:
+
+```bash
+kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic new_topic_1 --group consumer_group_2
+```
+
+We should now be getting messages as usual. Now, open another terminal window to repeat the above command. Messages from your producer should now get divided between the 2 consumers. You can repeat this process and have 3 consumers in the same group `consumer_group_2` consuming messages from the same producer. 
 
 
 

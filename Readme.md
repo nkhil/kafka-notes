@@ -322,24 +322,53 @@ Other options to run Kafka include in a docker container
 
 ## Commands
 
-As mentioned in the article above, if you face issues running `kafka-server-start /usr/local/etc/kafka/server.properties`, you will need to substitute the value of `listeners` in `/usr/local/etc/kafka/server.properties` to
+**Start Zookeeper**
+
+```
+zookeeper-server-start /usr/local/etc/kafka/zookeeper.properties
+```
+
+**Start kafka server**
+
+```
+kafka-server-start /usr/local/etc/kafka/server.properties
+```
+
+
+As mentioned in the article above, if you face issues running `kafka-server-start /usr/local/etc/kafka/server.properties`
+
+and get this error:
+
+```
+[2018-08-28 16:24:41,166] WARN [Controller id=0, targetBrokerId=0] Connection to node 0 could not be established. Broker may not be available. (org.apache.kafka.clients.NetworkClient)
+[2018-08-28 16:24:41,268] WARN [Controller id=0, targetBrokerId=0] Connection to node 0 could not be established. Broker may not be available. (org.apache.kafka.clients.NetworkClient)
+```
+
+you will need to substitute the value of `listeners` in `/usr/local/etc/kafka/server.properties` to
 
 ```
 listeners=PLAINTEXT://localhost:9092
 ```
+**Creating topics**
 
 To create a new topic
 
 ```bash
 kafka-topics --bootstrap-server localhost:9092 --topic first_topic --create
+
+# OR
+
+kafka-topics --zookeeper localhost:2181 --topic third_topic --create --partitions 6 --replication-factor 1
+
 ```
 
-> If you don't provide the number of partitions (using `--partitions`) or the replication factor (using `--replication-factor`), they both default to 1
+> If you call --bootstrap-server and don't provide the number of partitions (using `--partitions`) or the replication factor (using `--replication-factor`), they both default to 1. However, if you use --zookeeper, it will throw an error unless you specify values for those arguments.
 
 To list all the topics
 
 ```bash
 kafka-topics --bootstrap-server localhost:9092 --list
+# OR kafka-topics --zookeeper localhost:2181 --list
 
 # first_topic
 ```
@@ -371,3 +400,66 @@ Topic: second_topic	PartitionCount: 6	ReplicationFactor: 1	Configs: segment.byte
 	Topic: second_topic	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
 	Topic: second_topic	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
 ```
+
+To delete a topic:
+
+```bash
+kafka-topics --zookeeper localhost:2181 --topic second_topic --delete
+
+# Topic second_topic is marked for deletion.
+# Note: This will have no impact if delete.topic.enable is not set to true.
+```
+
+Note that `delete.topic.enable` is set to true by default. 
+
+# Kafka console producer CLI
+
+Launch the producer by using `kafka-console-producer` 
+
+```bash
+kafka-console-producer --broker-list 127.0.0.1:9092 --topic first_topic
+>Hello World # This is your message
+```
+In case you don't already have that topic created, and you try to produce messages, you'll see this
+```bash
+kafka-console-producer --broker-list 127.0.0.1:9092 --topic some_topic
+>Hello World
+# => [2020-07-25 13:31:20,865] WARN [Producer clientId=console-producer] Error while fetching metadata with correlation id 3 : {new_topic_1=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+
+```
+This will go away after the first attempt, as `kafka-producer` resolved this issue and elects a leader for the new topic called `new_topic_1`. 
+
+### Sidenote
+
+If you create new topics this way, the partitions and replication factor will be set to 1
+
+You can change this default like so:
+
+```bash
+cd /usr/local/etc/kafka
+vim server.properties 
+```
+Look for the 'Log Basics' section
+
+```
+############################# Log Basics #############################
+
+# A comma separated list of directories under which to store log files
+log.dirs=/usr/local/var/lib/kafka-logs
+
+# The default number of log partitions per topic. More partitions allow greater
+# parallelism for consumption, but this will also result in more files across
+# the brokers.
+num.partitions=3
+
+# The number of threads per data directory to be used for log recovery at startup and flushing at shutdown.
+# This value is recommended to be increased for installations with data dirs located in RAID array.
+num.recovery.threads.per.data.dir=1
+```
+The `num.partitions` value is what you're after. Here I've modified it from 1 to 3. 
+
+
+
+
+
+

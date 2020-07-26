@@ -475,7 +475,7 @@ kafka-console-producer --broker-list 127.0.0.1:9092 --topic first_topic
 > Hello World!
 ```
 
-You should see the `Hello World!` message being consumed in the consumer terminal window. 
+You should see the `Hello World!` message appear in the consumer terminal window. 
 
 *add the `--from-beginning` read all the messages from the beginning*
 
@@ -495,6 +495,14 @@ kafka-console-consumer --bootstrap-server 127.0.0.1:9092 --topic new_topic_1 --g
 ```
 
 We should now be getting messages as usual. Now, open another terminal window to repeat the above command. Messages from your producer should now get divided between the 2 consumers. You can repeat this process and have 3 consumers in the same group `consumer_group_2` consuming messages from the same producer. 
+
+### Sidenote
+
+If you now, stop all 3 consumers, and start a new one with the `--from-beginning` flag, you'll notice that it does not display all the messages. 
+
+That's because we specified the group `consumer_group_2`, and the offsets have been commited in kafka, essentially `consumer_group_2` has read all the messages until this point (or offset) - so it only displays the messages that have not yet been consumed. 
+
+### Kafka consumer groups
 
 
 
